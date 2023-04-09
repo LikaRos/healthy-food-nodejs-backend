@@ -1,16 +1,12 @@
 require("dotenv").config();
 
-
 const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
 const mysql = require("mysql");
-const { DB_HOST,  DB_USER, DB_PASSWORD, DB } = process.env;
+const { DB_HOST, DB_USER, DB_PASSWORD, DB } = process.env;
 const app = express();
-// const swaggerUi = require("swagger-ui-express");
-// const swaggerDocument = require("./swagger.json");
-
-
+const PER_PAGE = 8;
 
 const db = mysql.createConnection({
   host: DB_HOST,
@@ -36,45 +32,54 @@ app.use(express.json());
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-  console.log( res.json);
+  console.log(res.json);
   res.json("Hello");
 });
 
 app.get("/products", (req, res) => {
-  const query = "Select * FROM goods";
+  const query = `Select goods.*, categories.category FROM goods JOIN categories ON categories.id = goods.category_id ORDER BY goods.new_price LIMIT ${PER_PAGE} OFFSET ${
+    PER_PAGE * (req.query.page - 1)
+  }`;
   db.query(query, (err, data) => {
     if (err) {
       console.log(err);
       return res.json(err);
     }
-    console.log(data[1].image);
-    return res.json(data);
-  });
-
-  db.end((err) => {
-    if (err) {
-      console.log(err);
-      return err;
-    } else {
-      console.log("db is closed");
-    }
-  });
-});
-
-app.post("/products", (req, res) => {
-  const query = "Insert into goods(`title`, `description`, `old_price`, `new_price`, `additional_info`, `image`, `count`) values (?)";
-  const values = [req.body.title, req.body.description, req.body.old_price, req.body.new_price, req.body.additional_info, req.body.image, req.body.count];
-  db.query(query, [values], (err, data) => {
-    if (err) return res.send(err);
     console.log(data);
     return res.json(data);
   });
 });
 
+app.post("/orders", (req, res) => {
+  const { email, name, message, address, number, cart } = req.body;
+  let orderId;
+
+  const query =
+    "Insert into orders(`name`, `email`, `number`, `address`, `message`) values (?)";
+  const values = [name, email, number, address, message];
+  db.query(query, [values], (err, data) => {
+    if (err) return res.send(err);
+
+    orderId = data.insertId;
+
+    const addGoodsQuery =
+      "Insert into goods_orders (`goods_id`, `order_id`, `quantity`) values ?";
+    const addGoodsValues = cart.map((item) => [
+      item.product.id,
+      orderId,
+      item.quantity,
+    ]);
+    console.log(addGoodsValues);
+
+    db.query(addGoodsQuery, [addGoodsValues], (err, data) => {
+      if (err) return res.send(err);
+      return res.json(data);
+    });
+  });
+});
 
 app.set("json space", 8);
 
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
 });
