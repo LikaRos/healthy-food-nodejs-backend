@@ -69,7 +69,7 @@ app.post("/orders", (req, res) => {
       orderId,
       item.quantity,
     ]);
-    console.log(addGoodsValues);
+   
 
     db.query(addGoodsQuery, [addGoodsValues], (err, data) => {
       if (err) return res.send(err);
