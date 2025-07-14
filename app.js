@@ -3,8 +3,11 @@ require("dotenv").config();
 const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
-const mysql = require("mysql");
+// const mysql = require("mysql");
+const mysql = require("mysql2");
+
 const { DB_HOST, DB_USER, DB_PASSWORD, DB } = process.env;
+
 const app = express();
 const PER_PAGE = 8;
 
@@ -69,7 +72,6 @@ app.post("/orders", (req, res) => {
       orderId,
       item.quantity,
     ]);
-   
 
     db.query(addGoodsQuery, [addGoodsValues], (err, data) => {
       if (err) return res.send(err);
