@@ -10,12 +10,12 @@ const cors = require("cors");
 //   credentials: true
 // }));
 
-// const mysql = require("mysql");
 const mysql = require("mysql2");
 
 const { DB_HOST, DB_USER, DB_PASSWORD, DB } = process.env;
 
 const app = express();
+
 const PER_PAGE = 8;
 
 const db = mysql.createConnection({
@@ -98,4 +98,10 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-module.exports = app;
+// 🚀 Vercel entry point
+const serverless = require("serverless-http");
+
+module.exports = {
+  app,
+  handler: serverless(app),
+};
