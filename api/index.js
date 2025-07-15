@@ -3,6 +3,13 @@ require("dotenv").config();
 const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
+
+// const cors = require('cors');
+// app.use(cors({
+//   origin: 'https://your-frontend.vercel.app',
+//   credentials: true
+// }));
+
 // const mysql = require("mysql");
 const mysql = require("mysql2");
 
